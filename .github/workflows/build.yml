@@ -1,0 +1,39 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "master"
+
+env:
+  REGISTRY: ghcr.io
+  USER: maxdom
+  APP: my-nginx
+  VER: 1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Authenticate to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ env.USER }}/${{ env.APP }}:${{ env.VER }}
+          
