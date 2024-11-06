@@ -65,4 +65,4 @@ jobs:
           # to-env: production
           # ignore-unchanged: true
           # only-severities: critical,high
-          # github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
