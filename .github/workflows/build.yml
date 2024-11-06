@@ -1,4 +1,4 @@
-name: Build
+name: Build & Scan
 
 on:
   push:
@@ -30,13 +30,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Meta infro from registry
-      # (i think about not/existing repo, tag..)
       - name: Extract metadata (tags, labels) for Docker
+        # (i think about not/existing repo, tag..)
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
-          images: ${{ env.REGISTRY }}/${{ env.APP }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Build and push Docker image
         id: push
@@ -45,7 +44,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }} # ${{ env.USER }}/${{ env.APP }}:${{ env.VER }}
+          tags: ${{ steps.meta.outputs.tags }} # ${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ env.VER }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
