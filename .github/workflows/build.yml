@@ -30,7 +30,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # ?
+      # Meta infro from registry
+      # (i think about not/existing repo, tag..)
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
@@ -38,12 +39,31 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.APP }}
 
       - name: Build and push Docker image
-        # uses: docker/build-push-action@v6
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+        id: push
+        uses: docker/build-push-action@v6
+        # uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
         with:
           context: .
           push: true
-          # tags: ${{ env.USER }}/${{ env.APP }}:${{ env.VER }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }} # ${{ env.USER }}/${{ env.APP }}:${{ env.VER }}
           labels: ${{ steps.meta.outputs.labels }}
-          
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+      
+      # Snan image
+      # a. Compare the image built in the pull request with the one in production
+      - name: Docker Scout
+        id: docker-scout
+        uses: docker/scout-action@v1
+        with:
+          command: quickview
+          image: ${{ steps.meta.outputs.tags }} # ${{ env.USER }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} 
+          # to-env: production
+          # ignore-unchanged: true
+          # only-severities: critical,high
+          # github-token: ${{ secrets.GITHUB_TOKEN }}
